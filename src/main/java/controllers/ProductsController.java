@@ -8,10 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import services.ProductService;
-
-import static util.Constants.*;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +16,8 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static util.Constants.*;
 
 @RestController
 @CrossOrigin(origins = {"*"})
