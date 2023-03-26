@@ -1,6 +1,8 @@
 package services.impl;
 
 import dao.ProductDao;
+import exceptions.InvalidEanException;
+import exceptions.ProductAlreadyExistsException;
 import models.Product;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,7 +52,7 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    public void addProductFailTest() throws Exception {
+    public void addProductFailTest() {
 
         String provider = "HACENDADO";
         String productCode = "11111";
@@ -66,7 +68,7 @@ public class ProductServiceImplTest {
 
         Mockito.when(productDao.findProductByEanDetails(provider, productCode, target)).thenReturn(optionalProduct);
 
-        Assert.assertThrows(Exception.class, () -> productServiceImpl.addProduct(provider, productCode, target));
+        Assert.assertThrows(ProductAlreadyExistsException.class, () -> productServiceImpl.addProduct(provider, productCode, target));
 
     }
 

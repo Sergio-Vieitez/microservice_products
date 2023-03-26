@@ -1,5 +1,6 @@
 package controllers;
 
+import exceptions.InvalidEanException;
 import models.Product;
 import models.ProductDto;
 import org.junit.Assert;
@@ -112,11 +113,11 @@ public class ProductsControllerTest {
         ProductDto productDto = new ProductDto("HACENDADO", "11111", "MERCADONA PORTUGAL");
 
         Mockito.when(productService.addProduct(productDto.getProvider(), productDto.getProductCode(),
-                productDto.getTarget())).thenThrow(Exception.class);
+                productDto.getTarget())).thenThrow(InvalidEanException.class);
 
         ResponseEntity<?> result = productsController.addProduct(ean);
 
-        Assert.assertEquals(result.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        Assert.assertEquals(result.getStatusCode(), HttpStatus.BAD_REQUEST);
         Assert.assertEquals(result.getBody(), "null");
 
     }

@@ -1,6 +1,7 @@
 package services.impl;
 
 import dao.ProductDao;
+import exceptions.ProductAlreadyExistsException;
 import models.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,11 +35,11 @@ public class ProductServiceImpl implements ProductService {
      * @param productCode the product code.
      * @param target the product target.
      * @return list of all products.
-     * @throws Exception if the product already exists.
+     * @throws ProductAlreadyExistsException if the product already exists.
      */
     @Override
     @Transactional
-    public List<Product> addProduct(String provider, String productCode, String target) throws Exception {
+    public List<Product> addProduct(String provider, String productCode, String target) throws ProductAlreadyExistsException {
         Optional<Product> product = productDao.findProductByEanDetails(provider, productCode, target);
         if (product.isEmpty()){
             Product newProduct = new Product();
@@ -48,7 +49,7 @@ public class ProductServiceImpl implements ProductService {
             productDao.save(newProduct);
             return productDao.findAll();
         }else{
-            throw new Exception("The product already exist");
+            throw new ProductAlreadyExistsException("The product already exist");
         }
     }
 

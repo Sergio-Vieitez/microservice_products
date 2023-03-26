@@ -1,5 +1,8 @@
 package controllers;
 
+import exceptions.InvalidEanException;
+import exceptions.InvalidTargetEanException;
+import exceptions.ProductAlreadyExistsException;
 import models.Product;
 import models.ProductDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +46,7 @@ public class ProductsController {
      * If an exception occurs, a ResponseEntity with HTTP status code 500 and the exception message is returned.
      */
     @GetMapping(value = "/ping", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateFile() {
+    public ResponseEntity<?> ping() {
         try {
             return ResponseEntity.status(HttpStatus.OK).body("Microservice products is running");
         } catch (Exception ex) {
@@ -63,7 +66,9 @@ public class ProductsController {
         try {
             ProductDto product = validateEan(ean);
             return ResponseEntity.status(HttpStatus.OK).body(product);
-        } catch (Exception ex) {
+        }catch (InvalidEanException | InvalidTargetEanException ex){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("" + ex.getMessage());
+        }catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("" + ex.getMessage());
         }
     }
@@ -104,6 +109,8 @@ public class ProductsController {
                     .map(product -> new ProductDto(product.getProvider(), product.getProductCode(), product.getTarget()))
                     .collect(Collectors.toList());
             return ResponseEntity.status(HttpStatus.OK).body(productResponseList);
+        }catch (InvalidEanException | InvalidTargetEanException | ProductAlreadyExistsException ex){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("" + ex.getMessage());
         }catch (Exception ex){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("" + ex.getMessage());
         }
@@ -126,6 +133,8 @@ public class ProductsController {
                     productDto.getTarget());
             return ResponseEntity.status(HttpStatus.OK).body(new ProductDto(product.getProvider(),
                     product.getProductCode(), product.getTarget()));
+        }catch (InvalidEanException | InvalidTargetEanException ex){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("" + ex.getMessage());
         }catch (Exception ex){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("" + ex.getMessage());
         }
@@ -146,6 +155,8 @@ public class ProductsController {
             String message = productService.deleteProduct(productDto.getProvider(), productDto.getProductCode(),
                     productDto.getTarget());
             return ResponseEntity.status(HttpStatus.OK).body(message);
+        }catch (InvalidEanException | InvalidTargetEanException ex){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("" + ex.getMessage());
         }catch (Exception ex){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("" + ex.getMessage());
         }
@@ -158,14 +169,14 @@ public class ProductsController {
      * @return a ProductDto containing the provider, product code, and target if the validation was successful
      * @throws Exception if the EAN code is invalid (e.g. incorrect length or contains non-numeric characters)
      */
-    private ProductDto validateEan(String ean) throws Exception {
+    private ProductDto validateEan(String ean) throws InvalidEanException, InvalidTargetEanException {
         String regex = "^[0-9]+$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(ean);
         if (ean.length() != 13){
-            throw new Exception("the ean has an incorrect length");
+            throw new InvalidEanException("the ean has an incorrect length");
         }else if (!matcher.matches()){
-            throw new Exception("the ean can only have numbers");
+            throw new InvalidEanException("the ean can only have numbers");
         }else {
             String provider = getProvider(ean.substring(0, 7));
             String productCodeEan = ean.substring(7, 12);
@@ -182,10 +193,10 @@ public class ProductsController {
      * @return the target associated with the target EAN code
      * @throws Exception if the target EAN code is invalid (i.e. not found in the TARGET_MAP)
      */
-    private String getTarget(String targetEan) throws Exception {
+    private String getTarget(String targetEan) throws InvalidTargetEanException {
         String target = TARGET_MAP.get(targetEan);
         if (target == null) {
-            throw new Exception("The target is invalid");
+            throw new InvalidTargetEanException("The target is invalid");
         }
         return target;
     }
